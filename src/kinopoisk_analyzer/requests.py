@@ -33,5 +33,3 @@ class FiltersRequester:
             print(f"{Stylers.bold(self.__class__)}: Response's status_code = {response.status_code}", file=sys.stderr)
 
         return response
-
-
