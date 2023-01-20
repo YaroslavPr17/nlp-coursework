@@ -1,13 +1,19 @@
+import ast
+import json
+import re
 import sys
-from typing import Callable
+from pathlib import Path
+from typing import Callable, Union
 
 import dill
 import folium
 import numpy as np
 import pandas as pd
 import requests
+from typing.re import Pattern
 
 from src.kinopoisk_analyzer.requests import FilmListRequester
+from src.kinopoisk_analyzer.utils.constants import data_path
 
 
 def get_visualization(property_: str, apply_function: Callable, consider_nones: bool = True, source: str = 'browser'):
@@ -119,6 +125,15 @@ def aggregate_films_per_country_by(film_data_field: str, consider_nones=True):
 
 
 def make_geographical_coordinates_for_countries(countries):
+    def _get_country_borders_info(country_filename: str) -> Union[dict, None]:
+        country_info_path = Path(data_path, 'countries_coordinates', country_filename)
+        try:
+            with open(country_info_path, 'rb') as country_file:
+                return dill.load(country_file)
+        except FileNotFoundError:
+            print(f"Cannot find coordinates of country={country_filename} in storage.", file=sys.stderr)
+            return None
+
     coordinates = []
 
     _replacements = {
@@ -138,20 +153,16 @@ def make_geographical_coordinates_for_countries(countries):
         print(country, translated_country)
 
         if country == 'Чехословакия':
-            czech_response = requests.get(
-                f'https://raw.githubusercontent.com/georgique/world-geojson/main/countries/czech.json')
-            slovakia_response = requests.get(
-                f'https://raw.githubusercontent.com/georgique/world-geojson/main/countries/slovakia.json')
-            response = czech_response.json()
-            response.get('features').extend(slovakia_response.json().get('features'))
+            czech_response = _get_country_borders_info('czech.json')
+            slovakia_response = _get_country_borders_info('slovakia.json')
+            response = czech_response
+            response.get('features').extend(slovakia_response.get('features'))
         else:
-            response = requests.get(
-                f'https://raw.githubusercontent.com/georgique/world-geojson/main/countries/{translated_country}.json')
-            print(response, end='\n\n')
-            if response.status_code != 200:
-                print(f"No response from coordinates server: country={translated_country}", file=sys.stderr)
+            response = _get_country_borders_info(f'{translated_country}.json')
+            if response is None:
                 continue
-            response = response.json()
+
+        print(response, end='\n\n')
 
         features = response.get('features')
 

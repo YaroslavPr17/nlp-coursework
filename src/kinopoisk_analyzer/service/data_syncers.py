@@ -1,3 +1,4 @@
+import json
 import sys
 from pathlib import Path
 
@@ -66,15 +67,25 @@ def sync_countries_coordinates():
     _tqdm = tqdm.tqdm(countries_files_names, file=sys.stdout)
     _tqdm.set_description(f'Downloading countries\' border-coordinates')
 
+    n_retrieved = 0
+    n_saved = 0
     for country_file_name in _tqdm:
 
         # Sample country_file_name='/argentina.json'
         _country_file_name = re.split('/', country_file_name)[1]
-        data = requests.get(f'https://raw.githubusercontent.com/georgique/world-geojson/main/countries/{_country_file_name}')
+        data: requests.Response = requests.get(f'https://raw.githubusercontent.com/georgique/world-geojson/main/countries/{_country_file_name}')
 
         if data.status_code != 200:
             coordinates_logger.error(f'Error in retrieving coordinates information in {_country_file_name}. Error code = {data.status_code}')
             continue
 
+        n_retrieved += 1
+        data: dict = data.json()
+
+        # print(data)
+
         with open(Path(data_path, 'countries_coordinates', _country_file_name), 'wb') as countries_coordinates_file:
-            dill.dump(data.json(), countries_coordinates_file)
+            dill.dump(data, countries_coordinates_file)
+            n_saved += 1
+
+    coordinates_logger.info(f'Retrieved: {n_retrieved} | Saved: {n_saved} countries\' coordinates.')
