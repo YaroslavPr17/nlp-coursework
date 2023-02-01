@@ -19,6 +19,7 @@ Barbados
 Bahrain
 Belize
 Belarus
+Belarus
 Belgium
 Benin
 Bulgaria
@@ -208,6 +209,7 @@ Ethiopia
 South Korea
 South Korea
 South Ossetia
+South Africa
 South Africa
 South Sudan
 Jamaica
