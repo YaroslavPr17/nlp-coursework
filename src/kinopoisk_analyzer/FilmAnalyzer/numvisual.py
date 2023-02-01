@@ -13,18 +13,20 @@ from pprint import pprint
 import requests
 from typing.re import Pattern
 
-from src.kinopoisk_analyzer.requests import FilmDistributionGenerator
+from src.kinopoisk_analyzer.requests import FilmListRequester
 from src.kinopoisk_analyzer.utils.constants import data_path
-from src.kinopoisk_analyzer.utils.functions import get_genres
 from src.kinopoisk_analyzer.utils.stylifiers import Stylers
+from src.kinopoisk_analyzer.utils.functions import get_genres, get_countries
 
 
 def get_visualization(properties_: List[str], apply_function: Callable, consider_nones: bool = True,
-                      source: str = 'browser'):
+                      source: str = 'browser', params: dict = None):
+    if params is None:
+        params = {}
     folium_map = folium.Map(location=[60, 100], zoom_start=1, width='100%')
 
     for property_name_ in properties_:
-        country_distribution = aggregate_films_per_country_by(property_name_, consider_nones, keyword='танец с саблями')
+        country_distribution = aggregate_films_per_country_by(property_name_, consider_nones, **params)
         coordinates = make_geographical_coordinates_for_countries(country_distribution.keys())
         stat_data = prepare_data(apply_function, country_distribution)
 
@@ -55,15 +57,10 @@ def get_visualization(properties_: List[str], apply_function: Callable, consider
 
 
 def aggregate_films_per_country_by(film_data_field: str,
-                                   consider_nones=True,
-                                   type_: str = 'ALL',
-                                   genre: str = None,
-                                   rating_from: int = 1,
-                                   rating_to: int = 10,
-                                   year_from: int = 1000,
-                                   year_to: int = 3000,
-                                   keyword: str = None):
+                                   consider_nones: bool = True,
+                                   **params):
     """
+    :param country:
     :param keyword:
     :param year_to:
     :param year_from:
@@ -77,24 +74,68 @@ def aggregate_films_per_country_by(film_data_field: str,
     """
 
     genres_list = get_genres()
-    if genre not in (*genres_list, None):
-        raise ValueError(f'The value of genre ({genre}) is incorrect.')
-    if type_ not in ['ALL', 'FILM', 'TV_SHOW', 'TV_SERIES', 'MINI_SERIES', None]:
-        raise ValueError(f'The value of type ({type_}) is incorrect.')
+    countries_list = get_countries()
 
-    request_params = {'order': 'RATING',
-                      'type': type_,
-                      'ratingFrom': rating_from,
-                      'ratingTo': rating_to,
-                      'yearFrom': year_from,
-                      'yearTo': year_to}
-    if genre is not None:
-        request_params['genres'] = [genres_list[genre]]
-    if keyword is not None:
-        request_params['keyword'] = keyword
+    request_params = params
+    if 'genres' in request_params:
+        request_params['genres'] = [genres_list[request_params['genres']]]
+    if 'countries' in request_params:
+        request_params['countries'] = [countries_list[request_params['countries']]]
 
-    country_distribution = FilmDistributionGenerator(params=request_params, per_country=True) \
-        .perform(film_data_field, consider_nones)
+    print(Stylers.bold(f'PARAMS TO SEARCH: \n'), request_params, end='\n\n')
+
+    response = FilmListRequester(params=request_params).perform(page=1)
+
+    country_distribution = {}
+    _current_page = 1
+
+    while len(response.json().get('items')):
+        print('\n\n===========================================================\n')
+        print(f'RESPONSE: page={_current_page}')
+        print(response.json())
+
+        json_response = response.json().get("items")
+        for film in json_response:
+
+            if film.get("countries") is None:
+                raise IndexError(
+                    f'Wrong number of countries for film {film.get("nameRu")} ({film.get("kinopoiskId")}).')
+
+            if not consider_nones and film.get(film_data_field) is None:
+                break
+
+            countries = film.get("countries")
+
+            countries = list(map(lambda lst: lst[0],
+                                 list(map(lambda single_cntry_dict: list(single_cntry_dict.values()), countries))))
+
+            print(countries)
+            film_property = film.get(film_data_field)
+            for country in countries:
+                country_distribution.setdefault(country, [])
+                country_distribution[country].append(film_property)
+
+        else:
+            _current_page += 1
+            response = FilmListRequester(params=request_params).perform(_current_page)
+
+            continue
+
+        break
+
+    if 'Германия (ФРГ)' in country_distribution:
+        if 'Германия' in country_distribution:
+            country_distribution.get('Германия').extend(country_distribution.get('Германия (ФРГ)'))
+        else:
+            country_distribution['Германия'] = country_distribution.get('Германия (ФРГ)')
+        del country_distribution['Германия (ФРГ)']
+
+    if 'СССР' in country_distribution:
+        if 'Россия' in country_distribution:
+            country_distribution.get('Россия').extend(country_distribution.get('СССР'))
+        else:
+            country_distribution['Россия'] = country_distribution.get('СССР')
+        del country_distribution['СССР']
 
     # print("current_page =", _current_page)
     print("COUNTRY_DISTRIBUTION =", country_distribution)
