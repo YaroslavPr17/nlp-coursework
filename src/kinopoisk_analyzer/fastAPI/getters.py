@@ -4,7 +4,7 @@ from fastapi.responses import HTMLResponse
 from typing import Union
 import numpy as np
 
-from src.kinopoisk_analyzer.FilmAnalyzer.main import get_visualization
+from src.kinopoisk_analyzer.FilmAnalyzer.numvisual import get_visualization
 
 app = FastAPI()
 
