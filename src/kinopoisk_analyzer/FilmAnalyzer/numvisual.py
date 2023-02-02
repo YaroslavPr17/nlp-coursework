@@ -1,6 +1,3 @@
-import ast
-import json
-import re
 import sys
 from pathlib import Path
 from typing import Callable, Union, List
@@ -9,14 +6,11 @@ import dill
 import folium
 import numpy as np
 import pandas as pd
-from pprint import pprint
-import requests
-from typing.re import Pattern
 
 from src.kinopoisk_analyzer.requests import FilmListRequester
 from src.kinopoisk_analyzer.utils.constants import data_path
-from src.kinopoisk_analyzer.utils.stylifiers import Stylers
 from src.kinopoisk_analyzer.utils.functions import get_genres, get_countries
+from src.kinopoisk_analyzer.utils.stylifiers import Stylers
 
 
 def get_visualization(properties_: List[str], apply_function: Callable, consider_nones: bool = True,
@@ -60,14 +54,6 @@ def aggregate_films_per_country_by(film_data_field: str,
                                    consider_nones: bool = True,
                                    **params):
     """
-    :param country:
-    :param keyword:
-    :param year_to:
-    :param year_from:
-    :param rating_to:
-    :param rating_from:
-    :param genre:
-    :param type_:
     :param film_data_field: The name of the film property
     :param consider_nones: Whether None values are involved in statistical measurement
     :return: Distribution over countries which produced listed films
