@@ -3,7 +3,7 @@ from pathlib import Path
 import dill
 from typing import Dict
 
-from src.kinopoisk_analyzer.utils.constants import data_path
+from src.kinopoisk_analyzer.FilmAnalyzer.utils.constants import data_path
 
 
 def get_genres() -> Dict[str, int]:

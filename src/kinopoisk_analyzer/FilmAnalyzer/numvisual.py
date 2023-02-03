@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 from src.kinopoisk_analyzer.utils.requests import FilmListRequester
-from src.kinopoisk_analyzer.utils.constants import data_path
+from src.kinopoisk_analyzer.FilmAnalyzer.utils.constants import data_path
 from src.kinopoisk_analyzer.FilmAnalyzer.utils.functions import get_genres, get_countries
 from src.kinopoisk_analyzer.utils.stylifiers import Stylers
 
@@ -146,7 +146,7 @@ def make_geographical_coordinates_for_countries(countries):
         'united_states': 'usa'
     }
 
-    with open('src/translations/ru_en_translations.kp', 'rb') as dictionary_file:
+    with open(Path(data_path, 'ru_en_translations.kp'), 'rb') as dictionary_file:
         dictionary = dill.load(dictionary_file)
 
     for country in countries:
