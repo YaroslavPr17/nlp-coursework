@@ -7,9 +7,9 @@ import folium
 import numpy as np
 import pandas as pd
 
-from src.kinopoisk_analyzer.requests import FilmListRequester
+from src.kinopoisk_analyzer.utils.requests import FilmListRequester
 from src.kinopoisk_analyzer.utils.constants import data_path
-from src.kinopoisk_analyzer.utils.functions import get_genres, get_countries
+from src.kinopoisk_analyzer.FilmAnalyzer.utils.functions import get_genres, get_countries
 from src.kinopoisk_analyzer.utils.stylifiers import Stylers
 
 

@@ -1,6 +1,4 @@
-import time
-from typing import Union, List
-from src.kinopoisk_analyzer.utils.functions import get_genres, get_countries
+from src.kinopoisk_analyzer.FilmAnalyzer.utils.functions import get_genres, get_countries
 
 
 class FilmParametersBuilder:
