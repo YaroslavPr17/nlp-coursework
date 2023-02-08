@@ -47,7 +47,12 @@ def get_visualization(properties_: List[str], apply_function: Callable, consider
 
     folium.LayerControl().add_to(folium_map)
 
-    return folium_map._repr_html_() if source == 'browser' else folium_map
+    if source == 'browser':
+        print('HTML Version for browser')
+        return folium_map._repr_html_()
+
+    print('Standard Version for Jupyter')
+    return folium_map
 
 
 def aggregate_films_per_country_by(film_data_field: str,

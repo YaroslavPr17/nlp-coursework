@@ -1,6 +1,6 @@
 import fastapi
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from typing import Union
 import numpy as np
 
@@ -16,7 +16,7 @@ async def root():
 
 
 @app.get("/visualizations")
-def read_item(prop: str = 'ratingKinopoisk', function: int = 1, consider_nones: int = 1, source: str = 'browser'):
+def read_item(prop: str, function: int, consider_nones: bool, source: str = 'browser', **params):
     funcs = [
         len,
         np.mean,
@@ -28,7 +28,12 @@ def read_item(prop: str = 'ratingKinopoisk', function: int = 1, consider_nones: 
     builder = FilmParametersBuilder()
     builder.set_keyword('алиса')
 
-    visual = get_visualization(properties_=['ratingKinopoisk'], apply_function=np.mean, consider_nones=False,
+    visual = get_visualization(properties_=[prop], apply_function=funcs[function], consider_nones=consider_nones,
                                source=source, params=builder.build())
 
-    return HTMLResponse(content=visual, status_code=200)
+    response = {
+        'data': 1,  # HTMLResponse(content=visual, status_code=200),
+        'params': 2  # [prop, function, consider_nones, source, params]
+    }
+
+    return 1  # JSONResponse(content=response, status_code=100)

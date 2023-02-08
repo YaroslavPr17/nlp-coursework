@@ -1,9 +1,19 @@
+from typing import Any, Union
+
 from src.kinopoisk_analyzer.FilmAnalyzer.utils.functions import get_genres, get_countries
 
 
 class FilmParametersBuilder:
     def __init__(self):
-        pass
+        self.countries: Union[str, None] = None
+        self.keyword: Union[str, None] = None
+        self.yearTo: Union[int, None] = None
+        self.yearFrom: Union[int, None] = None
+        self.ratingTo: Union[int, None] = None
+        self.ratingFrom: Union[int, None] = None
+        self.genres: Union[str, None] = None
+        self.type: Union[str, None] = None
+        self.order: Union[str, None] = None
 
     def set_country(self, country: str):
         if country not in get_countries().keys():
@@ -26,12 +36,12 @@ class FilmParametersBuilder:
         self.type = type_
 
     def set_rating_from(self, rating_from: int):
-        if 0 <= rating_from <= 10:
+        if not 0 <= rating_from <= 10:
             raise ValueError(f'The given rating is {rating_from}. Not in 0..10.')
         self.ratingFrom = rating_from
 
     def set_rating_to(self, rating_to: int):
-        if 0 <= rating_to <= 10:
+        if not 0 <= rating_to <= 10:
             raise ValueError(f'The given rating is {rating_to}. Not in 0..10.')
         self.ratingTo = rating_to
 
