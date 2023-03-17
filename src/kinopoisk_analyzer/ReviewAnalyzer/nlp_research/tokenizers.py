@@ -10,7 +10,7 @@ from src.kinopoisk_analyzer.ReviewAnalyzer.utils.constants import data_path
 
 
 def read_reviews(id_: int) -> List[str]:
-    with open(Path(data_path, 'reviews', f'{id_}.rv'), 'rb') as reviews_file:
+    with open(Path(data_path, 'reviews.df', f'{id_}.rv'), 'rb') as reviews_file:
         reviews = list(dill.load(reviews_file).keys())
 
     print(type(reviews))

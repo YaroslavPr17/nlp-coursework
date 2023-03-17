@@ -39,7 +39,7 @@ def retrieve_reviews(film_id: int, save: bool = False):
                   file=f)
 
     if save:
-        with open(Path(data_path, 'reviews', f'{str(film_id)}.rv'), 'wb') as reviews_data:
-            dill.dump(reviews, reviews_data)
+        with open(Path(data_path, 'reviews.df', f'{str(film_id)}.rv'), 'wb') as reviews_data_file:
+            dill.dump(reviews, reviews_data_file)
 
     return reviews
