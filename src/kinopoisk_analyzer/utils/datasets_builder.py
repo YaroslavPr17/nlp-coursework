@@ -6,16 +6,39 @@ import pandas as pd
 from src.kinopoisk_analyzer.utils.aggregators import \
     aggregate_films_by_letter, \
     aggregate_reviews_for_n_films, \
-    aggregate_reviews_by_ids_list
+    aggregate_reviews_by_ids_list, FilmListAggregator, aggregate_films_by_params
 from src.kinopoisk_analyzer.utils.constants import datasets_path
 
-films_path = Path(datasets_path, 'films')
+films_path = Path(datasets_path, 'films.df')
 reviews_path = Path(datasets_path, 'reviews.df')
 
 
 def save_films_by_letter():
     films = aggregate_films_by_letter()
     print(f'Info about {len(films)} films loaded by letter.')
+
+    try:
+        with open(films_path, 'rb') as file:
+            old_films = dill.load(file)
+    except FileNotFoundError:
+        print('No saved films. New dataset created.')
+        with open(films_path, 'wb') as file:
+            dill.dump(pd.DataFrame(films), file)
+    else:
+        print(f'There are saved films ({len(old_films)} items). New films-info will be saved into existing dataset.')
+        with open(films_path, 'wb') as file:
+            dill.dump(
+                pd.concat([old_films, pd.DataFrame(films)],
+                          ignore_index=True),
+                file)
+
+    with open(films_path, 'rb') as file:
+        return dill.load(file)
+
+
+def save_films_by_params(params: dict):
+    films = aggregate_films_by_params(params)
+    print(f'Info about {len(films)} films loaded by parameters specified.')
 
     try:
         with open(films_path, 'rb') as file:
@@ -84,11 +107,12 @@ def save_existing_reviews(reviews: dict):
         with open(reviews_path, 'rb') as file:
             old_reviews = dill.load(file)
     except FileNotFoundError:
-        print('No saved reviews.df. New dataset created.')
+        print('No saved reviews. New dataset created.')
         with open(reviews_path, 'wb') as file:
             dill.dump(pd.DataFrame(reviews).transpose(), file)
     else:
-        print('There are saved reviews.df. New reviews.df will be saved into existing dataset.')
+        print(f"There are saved reviews. ({old_reviews.shape[0]} items). "
+              f"New reviews ({len(reviews)} items) will be saved into existing dataset.")
         with open(reviews_path, 'wb') as file:
             dill.dump(pd.concat([old_reviews, pd.DataFrame(reviews).transpose()]), file)
 
@@ -120,6 +144,7 @@ def save_ids_list_for_top_films(aggregated_top: list, file_infix: str):
 
     with open(Path(datasets_path, filename), 'rb') as file:
         return dill.load(file)
+
 
 
 def save_Review_Label_dataset_from_full_dataframe(remove_duplicates: bool = False):

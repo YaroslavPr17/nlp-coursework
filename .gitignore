@@ -130,5 +130,5 @@ dmypy.json
 
 # Coursework
 datasets — копия/
-datasets/films
+datasets/films.df
 datasets/*.df

@@ -29,12 +29,23 @@ def aggregate_films_by_letter() -> List:
     return films_list
 
 
+def aggregate_films_by_params(params: dict) -> List:
+    films_list = []
+    try:
+        films_list.extend(FilmListAggregator(params).perform())
+    except KeyboardInterrupt:
+        print('Keyboard interrupt caught. Films returned.', file=sys.stderr)
+        return films_list
+
+    return films_list
+
+
 # def aggregate_reviews_by_ids(ids: list):
 #
 
 
 class FilmListAggregator:
-    def __init__(self, params):
+    def __init__(self, params: dict):
         self.params = params
         print(params)
         self.film_list = []

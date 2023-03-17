@@ -26,12 +26,12 @@ class FilmParametersBuilder:
         self.type = type_
 
     def set_rating_from(self, rating_from: int):
-        if 0 <= rating_from <= 10:
+        if not 0 <= rating_from <= 10:
             raise ValueError(f'The given rating is {rating_from}. Not in 0..10.')
         self.ratingFrom = rating_from
 
     def set_rating_to(self, rating_to: int):
-        if 0 <= rating_to <= 10:
+        if not 0 <= rating_to <= 10:
             raise ValueError(f'The given rating is {rating_to}. Not in 0..10.')
         self.ratingTo = rating_to
 
