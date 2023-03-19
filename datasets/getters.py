@@ -45,6 +45,15 @@ def load_reviews_Review_Label() -> pd.DataFrame:
     except FileNotFoundError:
         print(f'No file named {filename} in dataset directory.')
 
+def load_reviews_Review_Label_clean() -> pd.DataFrame:
+    filename = 'reviews_Review_Label_clean.df'
+
+    try:
+        with open(Path(datasets_path, filename), 'rb') as file:
+            return dill.load(file)
+    except FileNotFoundError:
+        print(f'No file named {filename} in dataset directory.')
+
 
 def load_films() -> pd.DataFrame:
     filename = 'films.df'
