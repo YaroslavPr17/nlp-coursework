@@ -164,6 +164,8 @@ def save_Review_Label_dataset_from_full_dataframe(remove_duplicates: bool = Fals
                                                                                    axis=1)
         if remove_duplicates:
             dataset = dataset.drop_duplicates(subset=['review'])
+
+        dataset = dataset.reset_index().drop(columns=['index'])
         print(f"Shape of '{new_dataset_filename}' dataset = {dataset.shape}")
         dill.dump(dataset, rev_file)
         return dataset
