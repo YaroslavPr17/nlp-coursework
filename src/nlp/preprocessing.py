@@ -3,7 +3,7 @@ from typing import Callable, List
 
 
 def clean(review: str, tokenizer_type: str, stopwords: List[str],
-          lemmatizer_type: str = 'rulemma', tagger=None, lemmatizer=None):
+          lemmatizer_type: str = 'pymorphy2', tagger=None, lemmatizer=None):
     html_pattern = r'<[^<]+?>'
     escape_pattern = r'[\n|\r|\b]'
 
