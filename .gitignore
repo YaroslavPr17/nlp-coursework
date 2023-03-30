@@ -133,3 +133,4 @@ datasets — копия/
 datasets/films.df
 datasets/*.df
 *.df
+/models/
