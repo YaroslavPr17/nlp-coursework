@@ -129,8 +129,7 @@ dmypy.json
 .pyre/
 
 # Coursework
-datasets — копия/
-datasets/films.df
-datasets/*.df
 *.df
 /models/
+tmp_files
+/data
