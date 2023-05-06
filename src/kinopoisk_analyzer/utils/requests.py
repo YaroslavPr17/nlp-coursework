@@ -13,6 +13,7 @@ class Requester:
     def __init__(self):
         self.task_url: str
         self.params: dict
+
     @staticmethod
     def print_error(class_name, status_code: int):
         print(f"{Stylers.bold(class_name)}: Response's status_code = {status_code}", file=sys.stderr)
@@ -27,6 +28,22 @@ class FilmListRequester(Requester):
     def perform(self, page: int) -> requests.Response:
         self.params['page'] = page
         response = requests.get(base_url_2_2 + self.task_url, params=self.params,
+                                headers={'X-API-KEY': constants.X_API_KEY})
+
+        if response.status_code != 200:
+            Requester.print_error(self.__class__, response.status_code)
+            # print(f"Response's status_code = {response.status_code}", file=sys.stderr)
+
+        return response
+
+
+class FilmRequester(Requester):
+    def __init__(self):
+        super().__init__()
+        self.task_url = '/films'
+
+    def perform(self, film_id: int) -> requests.Response:
+        response = requests.get(f"{base_url_2_2}{self.task_url}/{film_id}",
                                 headers={'X-API-KEY': constants.X_API_KEY})
 
         if response.status_code != 200:
