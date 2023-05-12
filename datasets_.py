@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Literal, Tuple
+from typing import Literal, Tuple, Union
 
 import pandas as pd
 from sklearn.model_selection import train_test_split as train_test_split_
@@ -44,7 +44,7 @@ class DatasetLoader:
                                           remove_neutral_class: bool = False,
                                           classnames_to_int: bool = False,
                                           random_state: int = 42,
-                                          show_path: bool = False) -> pd.DataFrame | Tuple[pd.DataFrame, pd.DataFrame]:
+                                          show_path: bool = False) -> Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame]]:
         subfolder = 'reviews_Review_Label'
         if tokenizer:
             filename = f'{subfolder}_{tokenizer}_{stopwords}.csv'
