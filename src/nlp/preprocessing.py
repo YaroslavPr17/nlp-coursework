@@ -2,15 +2,20 @@ import re
 from typing import Callable, List
 
 
-def clean(review: str, tokenizer_type: str, stopwords: List[str],
-          lemmatizer_type: str = 'pymorphy2', tagger=None, lemmatizer=None):
-    html_pattern = r'<[^<]+?>'
-    escape_pattern = r'[\n|\r|\b]'
+def clean(review: str, tokenizer_type: str = None, stopwords: List[str] = None,
+          lemmatizer_type: str = 'pymorphy2', tagger=None, lemmatizer=None, char_clean_only: bool = False,
+          lowercase: bool = False):
+    _html_pattern = r'<[^<]+?>'
+    _escape_pattern = r'[\n|\r|\b]'
 
-    lowered_review = review.lower()
+    if lowercase:
+        review = review.lower()
 
-    lowered_review = re.sub(html_pattern, '', lowered_review)
-    lowered_review = re.sub(escape_pattern, '', lowered_review)
+    review = re.sub(_html_pattern, '  ', review)
+    review = re.sub(_escape_pattern, '  ', review)
+
+    if char_clean_only:
+        return review
 
     if tokenizer_type == 'razdel':
         import razdel
@@ -18,13 +23,13 @@ def clean(review: str, tokenizer_type: str, stopwords: List[str],
 
     elif tokenizer_type == 'TreebankWordTokenizer':
         from nltk.tokenize import TreebankWordTokenizer
-        review_tokens = TreebankWordTokenizer().tokenize(lowered_review)
+        review_tokens = TreebankWordTokenizer().tokenize(review)
 
     elif tokenizer_type == 'rutokenizer':
         import rutokenizer
         tokenizer = rutokenizer.Tokenizer()
         tokenizer.load()
-        review_tokens = tokenizer.tokenize(lowered_review)
+        review_tokens = tokenizer.tokenize(review)
     else:
         raise NotImplementedError('Unknown tokenizer')
 
