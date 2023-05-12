@@ -1,3 +1,4 @@
+import sys
 from typing import Iterable, List
 import dill
 import os
@@ -95,15 +96,61 @@ def get_df_by_film_and_person(data: pd.DataFrame, film_id: int, name: str) -> pd
     return filtered
 
 
-def collect_sents_to_summarize(data: pd.DataFrame) -> List[str]:
+def collect_sents_to_summarize(data: pd.DataFrame, n_sents: int = 100) -> List[str]:
     all_sents = np.array(data['occurrences'].sum())
     pl = Pipeline('classification', model_type='linear', preprocess=True)
     _, confs = pl(pd.Series(all_sents), return_confs=True)
 
     to_summarize = []
     to_summarize.extend(all_sents[confs < 0].tolist())
-    _n = 100 - len(to_summarize)
+    _n = n_sents - len(to_summarize)
     _n = _n if _n < len(confs) else len(confs) - len(to_summarize)
     to_summarize.extend(all_sents[np.argpartition(confs, -_n)[-_n:]].tolist())
 
     return to_summarize
+
+
+def split_opinions_to_chunks(tokenizer,
+                             data: pd.DataFrame = None,
+                             sentences: List[str] = None,
+                             model_max_input: int = 600,
+                             show_info: bool = False):
+    if sentences is not None:
+        all_sents = sentences
+    elif data is not None:
+        all_sents = list(data['occurrences'].sum())
+    else:
+        raise ValueError('No data is provided!')
+
+    chunks = ['']
+    chunks_length = [0]
+
+    for sent in all_sents:
+        _new_length = chunks_length[-1] + len(tokenizer.encode(sent))
+        if _new_length > model_max_input:
+            if len(tokenizer.encode(sent)) > model_max_input:
+                print('The sentence has length greater that max model input, thus will be skipped', file=sys.stderr)
+                continue
+            chunks.append('')
+            chunks_length.append(0)
+            _new_length = chunks_length[-1] + len(tokenizer.encode(sent))
+
+        chunks_length[-1] = _new_length
+        chunks[-1] += ' ' + sent
+
+    if show_info:
+        import matplotlib.pyplot as plt
+
+        print('Overall number of sentences:', len(all_sents))
+        print('Number of chunks:', len(chunks))
+
+        plt.figure(figsize=(10, 3))
+
+        plt.plot(chunks_length)
+        plt.title('The number of tokens across all chunks')
+        plt.xlabel('Chunk number')
+        plt.ylabel('Number of tokens')
+
+        plt.show()
+
+    return chunks
