@@ -4,7 +4,7 @@ from typing import Literal, Tuple, Union
 import pandas as pd
 from sklearn.model_selection import train_test_split as train_test_split_
 
-from src.kinopoisk_analyzer.utils.constants import datasets_path
+from src.utils.constants import datasets_path
 
 
 def load_dataset(filename: str,
