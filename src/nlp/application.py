@@ -97,7 +97,10 @@ def get_df_by_film_and_person(data: pd.DataFrame, film_id: int, name: str) -> pd
 
 
 def collect_sents_to_summarize(data: pd.DataFrame, n_sents: int = 100) -> List[str]:
-    all_sents = np.array(data['occurrences'].sum())
+    all_sents = []
+    for sents in data['occurrences']:
+        all_sents.extend(sents)
+    all_sents = np.array(all_sents)
     pl = Pipeline('classification', model_type='linear', preprocess=True)
     _, confs = pl(pd.Series(all_sents), return_confs=True)
 
