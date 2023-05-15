@@ -5,11 +5,11 @@ from typing import Dict, List, Union, Tuple
 import dill
 import pandas as pd
 
-from src.data.FilmAnalyzer.utils.functions import get_genres, get_countries
+from src.data.films_info.functions import get_genres, get_countries
 from src.data.requests import FilmListRequester, ReviewRequester, TopFilmsRequester
 from src.utils.stylifiers import Stylers
 from src.utils.constants import datasets_path
-from src.data.FilmAnalyzer.builders import FilmParametersBuilder
+from src.data.films_info.builders import FilmParametersBuilder
 
 
 def aggregate_films_by_letter() -> List:
@@ -199,7 +199,3 @@ class TopAggregator:
             json_response = requester.perform(self.top_type, page=_current_page).json()
 
         return self.film_list
-
-
-
-
