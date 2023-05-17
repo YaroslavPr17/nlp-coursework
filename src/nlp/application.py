@@ -136,14 +136,14 @@ class BertClassifier:
                 correct_predictions += torch.sum(preds == labels)
 
                 all_preds.extend(preds.tolist())
-                all_labels.extend(labels)
+                all_labels.extend(labels.tolist())
 
                 losses.append(loss.item())
 
                 t.set_postfix(ordered_dict={'loss': loss.item()}, refresh=True)
 
         print('Classification report:')
-        print(classification_report(test_dataloader.dataset.labels, all_preds))
+        print(classification_report(all_labels, all_preds))
 
         val_acc = correct_predictions.double() / len(test_dataloader.dataset)
         val_loss = np.mean(losses)
@@ -195,7 +195,7 @@ class BertLogRegClassifier:
         self.model.eval()
 
         self.all_train_embeddings = np.array([])
-        all_preds = []
+        all_labels = []
 
         t = tqdm(train_dataloader, file=sys.stdout, ncols=100)
 
@@ -211,16 +211,18 @@ class BertLogRegClassifier:
                 ).logits
 
                 self.all_train_embeddings = np.append(self.all_train_embeddings, embeddings.cpu().numpy())
-                all_preds.extend(labels)
+                all_labels.extend(labels.tolist())
 
         self.all_train_embeddings = self.all_train_embeddings.reshape(-1, self.out_features)
 
-        self.classifier.fit(self.all_train_embeddings, all_preds)
+        self.classifier.fit(self.all_train_embeddings, all_labels)
 
-    def predict(self, test_input):
+        
+    def predict(self, test_input, print_report=False):
         self.model.eval()
 
         self.all_test_embeddings = np.array([])
+        all_labels = []
 
         t = tqdm(test_input, file=sys.stdout, ncols=100)
 
@@ -228,6 +230,7 @@ class BertLogRegClassifier:
             with torch.no_grad():
                 input_ids = data['input_ids'].to(self.device)
                 attention_mask = data['attention_mask'].to(self.device).to(float)
+                labels = data['label']
 
                 embeddings = self.model(
                     input_ids=input_ids,
@@ -235,10 +238,17 @@ class BertLogRegClassifier:
                 ).logits
 
                 self.all_test_embeddings = np.append(self.all_test_embeddings, embeddings.cpu().numpy())
+                
+                all_labels.extend(labels.tolist())
 
         self.all_test_embeddings = self.all_test_embeddings.reshape(-1, self.out_features)
+        
+        all_preds = self.classifier.predict(self.all_test_embeddings)
+        
+        if print_report:
+            print(classification_report(all_labels, all_preds))
 
-        return self.classifier.predict(self.all_test_embeddings)
+        return all_preds
 
 
 class Pipeline:
