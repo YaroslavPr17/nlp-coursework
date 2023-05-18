@@ -77,7 +77,14 @@ def person_message_handler(message):
         if not film_id:
             film_id = None
 
-        scores, answers = get_person_characteristics(ne_dataset, name, qa_model, film_id, 1)
+        try:
+            film_id = int(film_id)
+        except ValueError:
+            bot.send_message(name_id_message.chat.id, 'Некорректный id фильма')
+            return
+
+        scores, answers = get_person_characteristics(ne_dataset, name, qa_model, film_id, 5)
+
         if not len(scores):
             bot.send_message(name_id_message.chat.id, 'Нет информации про указанного человека :(')
             return
@@ -94,15 +101,6 @@ def person_message_handler(message):
     bot.register_next_step_handler(msg, name_message_handler)
 
 
-
-
-
-
-
-@bot.message_handler()
-def help_message(message):
-    bot.send_message(message.chat.id, "Я бот-анализатор информации о фильмах!\n"
-                                      "Ты можешь написать 'привет'")
 
 
 @bot.message_handler(commands=['help'])
