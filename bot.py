@@ -3,6 +3,7 @@ import os
 
 import numpy as np
 import telebot
+import torch.cuda
 from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from transformers import pipeline
@@ -14,11 +15,12 @@ from src.nlp.application import get_df_by_person, get_df_by_film_and_person
 from src.nlp.info_extraction import get_person_characteristics
 
 bot = telebot.TeleBot('6151372769:AAFFdINtx93_dgK2LVg5FDzq5ZyHyI5GH14', parse_mode='MARKDOWN')
-dataset = DatasetLoader.load_films_Id_Title_Year_dataset()
+# dataset = DatasetLoader.load_films_Id_Title_Year_dataset()
 ne_dataset = DatasetLoader.load_named_entities_dataset()
 
 qa_model_name = "AlexKay/xlm-roberta-large-qa-multilingual-finedtuned-ru"
-qa_model = pipeline('question-answering', model=qa_model_name, tokenizer=qa_model_name)
+device = torch.cuda.is_available()
+qa_model = pipeline('question-answering', model=qa_model_name, tokenizer=qa_model_name, device=device)
 
 SENTIMENT_TEXT = 'Хочу узнать тональность отзыва!'
 PERSON_TEXT = 'Каков конкретный человек?'
@@ -106,8 +108,8 @@ def person_message_handler(message):
 
 @bot.message_handler(commands=['help'])
 def help_message(message):
-    bot.send_message(message.chat.id, "Я бот-анализатор информации о фильмах!\n"
-                                      "Ты можешь написать 'привет'")
+    bot.send_message(message.chat.id, "Я бот-анализатор отзывов на фильмы!\n"
+                                      "Перейдите в меню и выберите нужное действие!'")
 
 
 
