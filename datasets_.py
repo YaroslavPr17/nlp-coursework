@@ -1,10 +1,28 @@
+import os.path
 from pathlib import Path
 from typing import Literal, Tuple, Union
 
+import gdown
 import pandas as pd
 from sklearn.model_selection import train_test_split as train_test_split_
 
 from src.utils.constants import datasets_path
+
+
+links = {
+    'films_Id_Title.csv':           'https://drive.google.com/file/d/1Ks-HIXBJks5x6ZtFlhN3z7v2WhcVaKNr/view?usp=share_link',
+    'films_Id_Title_Year.csv':      'https://drive.google.com/file/d/1ZUlF7uk1RVbgUb7j9V3U0_cfcRkaYf_O/view?usp=share_link',
+    'named_entities.csv':           'https://drive.google.com/file/d/1hxNFX8XwmGx8HGtl2llGQFdY0yj3Jthh/view?usp=share_link',
+    'reviews.csv':                  'https://drive.google.com/file/d/1cbdn7YdW6Sc480wEUU2mkInyCi9QA-31/view?usp=share_link',
+    'reviews_Review_FilmId.csv':    'https://drive.google.com/file/d/1r0N5fvqI-xOHOs1zBOe-9mu7xm9Bh-K7/view?usp=share_link',
+    'top_best_films_Ids.csv':       'https://drive.google.com/file/d/1sz0yv_00jxT8-CRhX8eEFAHvHSw7KJtg/view?usp=share_link',
+    'top_popular_films_Ids.csv':    'https://drive.google.com/file/d/1fG5pO2XcoPpO71bGi3CaJrrVTSJKaZTH/view?usp=share_link',
+    'reviews_Review_Label.csv':                     'https://drive.google.com/file/d/1Cig_GpQ1tjU93rydkqGFie6ss6bNTNR8/view?usp=share_link',
+    'reviews_Review_Label_razdel_nltk.csv':         'https://drive.google.com/file/d/1Lsz_66tIggXUbglzL6khjU0CmuHxVXcr/view?usp=share_link',
+    'reviews_Review_Label_razdel_no.csv':           'https://drive.google.com/file/d/1Lsz_66tIggXUbglzL6khjU0CmuHxVXcr/view?usp=share_link',
+    'reviews_Review_Label_rutokenizer_nltk.csv':    'https://drive.google.com/file/d/1BAdi-lwwZ1zIsU8-V6ec_NPjCDb3AKsL/view?usp=share_link',
+    'reviews_Review_Label_rutokenizer_no.csv':      'https://drive.google.com/file/d/1xnuox7V9K2TQc0O6XxYnDYoAkOG4HGNV/view?usp=share_link',
+}
 
 
 def load_dataset(filename: str,
@@ -14,17 +32,35 @@ def load_dataset(filename: str,
                  subfolder: str = '',
                  random_state: int = 42,
                  custom_datasets_path: str = None,
+                 force_remote: bool = False
                  ):
     if custom_datasets_path is not None:
         datasets_path_ = custom_datasets_path
     else:
         datasets_path_ = datasets_path
 
+    path = Path(datasets_path_, subfolder, filename)
+
     if show_path:
-        print(Path(datasets_path_, subfolder, filename))
+        print(path)
+
+    if not os.path.exists(datasets_path):
+        os.makedirs(datasets_path)
+        if subfolder:
+            os.makedirs(Path(datasets_path, subfolder))
+    else:
+        if not os.path.exists(Path(datasets_path, subfolder)):
+            os.makedirs(Path(datasets_path, subfolder))
+
+    if os.path.exists(path) and not force_remote:
+        print(f'Dataset was found in local storage.')
+    else:
+        print(f'Dataset will be loaded from remote storage.')
+        gdown.download(links[filename],
+                       output=str(path), fuzzy=True)
 
     try:
-        dataset = pd.read_csv(Path(datasets_path_, subfolder, filename), index_col=0)
+        dataset = pd.read_csv(path, index_col=0)
         if train_test_split:
             train, test = train_test_split_(dataset, test_size=test_size, random_state=random_state)
             return train, test
@@ -44,18 +80,18 @@ class DatasetLoader:
                                           remove_neutral_class: bool = False,
                                           classnames_to_int: bool = False,
                                           random_state: int = 42,
-                                          show_path: bool = False) -> Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame]]:
+                                          show_path: bool = False,
+                                          **kwargs) -> Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame]]:
         subfolder = 'reviews_Review_Label'
         if tokenizer:
             filename = f'{subfolder}_{tokenizer}_{stopwords}.csv'
         else:
             filename = f'{subfolder}.csv'
 
-        if show_path:
-            print(Path(datasets_path, subfolder, filename))
-
         try:
-            dataset = pd.read_csv(Path(datasets_path, subfolder, filename), index_col=0)
+            # dataset = pd.read_csv(Path(datasets_path, subfolder, filename), index_col=0)
+
+            dataset = load_dataset(filename, False, test_size, show_path, subfolder, random_state, **kwargs)
 
             if classnames_to_int:
                 label_encoding = {
@@ -136,27 +172,30 @@ class DatasetLoader:
                                            train_test_split: bool = False,
                                            test_size: float = 0.3,
                                            show_path: bool = False,
-                                           random_state: int = 42
+                                           random_state: int = 42,
+                                           **kwargs
                                            ):
         filename = f'reviews_Review_FilmId.csv'
 
-        return load_dataset(filename, train_test_split, test_size, show_path, random_state=random_state)
+        return load_dataset(filename, train_test_split, test_size, show_path, random_state=random_state, **kwargs)
 
     @classmethod
     def load_films_Id_Title_Year_dataset(cls,
-                                         show_path: bool = False
+                                         show_path: bool = False,
+                                         **kwargs
                                          ):
         filename = f'films_Id_Title_Year.csv'
 
-        return load_dataset(filename, show_path=show_path)
+        return load_dataset(filename, show_path=show_path, **kwargs)
 
     @classmethod
     def load_named_entities_dataset(cls,
-                                    show_path: bool = False
+                                    show_path: bool = False,
+                                    **kwargs
                                     ):
         filename = f'named_entities.csv'
 
-        dataset = load_dataset(filename, show_path=show_path)
+        dataset = load_dataset(filename, show_path=show_path, **kwargs)
 
         # Bug: String looks like list, but NOT real list
         if isinstance(dataset['occurrences'].iloc[0], str):
