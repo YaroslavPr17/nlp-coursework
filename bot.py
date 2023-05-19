@@ -65,10 +65,10 @@ def person_message_handler(message):
         if '-' in name_id_message.text:
             name, film_id = name_id_message.text.split('-')
             name, film_id = name.strip(), film_id.strip()
-            bot.send_message(name_id_message.chat.id, f"Человек: {name}, id: {film_id}")
+            bot.send_message(name_id_message.chat.id, f"Запрос: {name}, id: {film_id}")
         else:
             name = name_id_message.text.strip()
-            bot.send_message(name_id_message.chat.id, f"Человек: {name}")
+            bot.send_message(name_id_message.chat.id, f"Запрос: {name}")
 
         if name is None or not name:
             bot.send_message(name_id_message.chat.id, 'Не введено имя персоны. Отмена поиска.')
@@ -78,7 +78,8 @@ def person_message_handler(message):
             film_id = None
 
         try:
-            film_id = int(film_id)
+            if film_id is not None:
+                film_id = int(film_id)
         except ValueError:
             bot.send_message(name_id_message.chat.id, 'Некорректный id фильма')
             return
