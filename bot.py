@@ -1,5 +1,7 @@
 import copy
 import os
+from pathlib import Path
+from typing import Dict
 
 import numpy as np
 import telebot
@@ -15,11 +17,13 @@ from src.nlp.application import get_df_by_person, get_df_by_film_and_person
 from src.nlp.info_extraction import get_person_characteristics
 
 bot = telebot.TeleBot('6151372769:AAFFdINtx93_dgK2LVg5FDzq5ZyHyI5GH14', parse_mode='MARKDOWN')
-# dataset = DatasetLoader.load_films_Id_Title_Year_dataset()
+image_path = Path('data', 'images')
+if not os.path.exists(image_path):
+    os.makedirs(image_path)
 ne_dataset = DatasetLoader.load_named_entities_dataset()
 
 qa_model_name = "AlexKay/xlm-roberta-large-qa-multilingual-finedtuned-ru"
-device = torch.cuda.is_available()
+device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 qa_model = pipeline('question-answering', model=qa_model_name, tokenizer=qa_model_name, device=device)
 
 SENTIMENT_TEXT = 'Хочу узнать тональность отзыва!'
@@ -28,6 +32,16 @@ ASK_REVIEW = 'Напишите отзыв о чём-либо'
 ASK_NAME = "Введите имя человека и id фильма (при необходимости), разделённые знаком дефис ('-')"
 
 
+class User:
+    def __init__(self, chat_id):
+        self.chat_id = chat_id
+        self.task = None
+        self.request_name = None
+        self.request_film_id = None
+
+
+users: Dict[int, User] = {}
+
 @bot.message_handler(commands=['start'])
 def start_message(message):
     bot.send_message(message.chat.id, "Привет ✌️\n"
@@ -35,6 +49,7 @@ def start_message(message):
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     keyboard.add(types.KeyboardButton(SENTIMENT_TEXT))
     keyboard.add(types.KeyboardButton(PERSON_TEXT))
+    users[message.chat.id] = User(chat_id=message.chat.id)
     bot.send_message(message.chat.id, 'Что Вы хотите сделать?', reply_markup=keyboard)
 
 
@@ -52,6 +67,10 @@ def sentiment_message_handler(message):
         with open(ret_value['graph_path'], 'rb') as graph_file:
             bot.send_photo(message.chat.id, graph_file.read(), caption=id2label[pred[0]])
         os.remove(ret_value['graph_path'])
+
+    if message.chat.id not in users:
+        users[message.chat.id] = User(message.chat.id)
+    users[message.chat.id].task = 'classification'
 
     msg = bot.send_message(message.chat.id, ASK_REVIEW)
     bot.register_next_step_handler(msg, review_handler)
@@ -78,6 +97,10 @@ def person_message_handler(message):
 
         if not film_id:
             film_id = None
+        else:
+            users[name_id_message.chat.id].request_film_id = int(film_id)
+
+        users[name_id_message.chat.id].request_name = name
 
         try:
             if film_id is not None:
@@ -86,7 +109,8 @@ def person_message_handler(message):
             bot.send_message(name_id_message.chat.id, 'Некорректный id фильма')
             return
 
-        scores, answers = get_person_characteristics(ne_dataset, name, qa_model, film_id, 5)
+        scores, answers = get_person_characteristics(ne_dataset, users[name_id_message.chat.id].request_name, qa_model,
+                                                     users[name_id_message.chat.id].request_film_id, n_qa_sessions=5)
 
         if not len(scores):
             bot.send_message(name_id_message.chat.id, 'Нет информации про указанного человека :(')
@@ -99,6 +123,9 @@ def person_message_handler(message):
             out_str += f'{telebot.formatting.mbold(str(answer.capitalize()))}\n\n'
         bot.send_message(name_id_message.chat.id, out_str)
 
+    if message.chat.id not in users:
+        users[message.chat.id] = User(message.chat.id)
+    users[message.chat.id].task = 'person_info'
 
     msg = bot.send_message(message.chat.id, ASK_NAME)
     bot.register_next_step_handler(msg, name_message_handler)
