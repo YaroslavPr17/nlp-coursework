@@ -17,14 +17,14 @@ from src.nlp.application import get_df_by_person, get_df_by_film_and_person
 from src.nlp.info_extraction import get_person_characteristics
 
 bot = telebot.TeleBot('6151372769:AAFFdINtx93_dgK2LVg5FDzq5ZyHyI5GH14', parse_mode='MARKDOWN')
-image_path = Path('data', 'images')
-if not os.path.exists(image_path):
-    os.makedirs(image_path)
-ne_dataset = DatasetLoader.load_named_entities_dataset()
-
-qa_model_name = "AlexKay/xlm-roberta-large-qa-multilingual-finedtuned-ru"
-device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-qa_model = pipeline('question-answering', model=qa_model_name, tokenizer=qa_model_name, device=device)
+# image_path = Path('data', 'images')
+# if not os.path.exists(image_path):
+#     os.makedirs(image_path)
+# ne_dataset = DatasetLoader.load_named_entities_dataset()
+#
+# qa_model_name = "AlexKay/xlm-roberta-large-qa-multilingual-finedtuned-ru"
+# device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+# qa_model = pipeline('question-answering', model=qa_model_name, tokenizer=qa_model_name, device=device)
 
 SENTIMENT_TEXT = 'Хочу узнать тональность отзыва!'
 PERSON_TEXT = 'Каков конкретный человек?'
@@ -58,7 +58,7 @@ def sentiment_message_handler(message):
     @bot.message_handler(func=lambda message: message.content_type == 'text')
     def review_handler(message):
         if len(message.text.split()) < 10:
-            bot.send_message(message.chat.id, 'Рецензия слишком коротка')
+            bot.send_message(message.chat.id, 'Рецензия слишком коротка. Требуемая длина рецензии > 10 слов.')
             return
         pred, ret_value = Pipeline('classification', preprocess=False)([message.text], return_confs=True,
                                                                        visualize=True)

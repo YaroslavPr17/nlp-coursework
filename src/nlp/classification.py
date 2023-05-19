@@ -76,11 +76,14 @@ class Pipeline:
         X_texts = self.vectorizer.transform(docs)
 
         if visualize and len(docs) == 1:
+            REQUIRED_WORDS_LIMIT = 10
+
             X_texts_markers: np.ndarray = (X_texts.toarray() > 0)[0]
-            WORDS_LIMIT = 10
-            print(WORDS_LIMIT)
             model_coefs = self.model.coef_[0][X_texts_markers]
             model_features = self.vectorizer.get_feature_names_out()[X_texts_markers]
+
+            WORDS_LIMIT = min(len(model_features) - 1, REQUIRED_WORDS_LIMIT)
+            print(WORDS_LIMIT)
 
             # positive predictions
             positive_coefs = model_coefs[np.argpartition(model_coefs, -WORDS_LIMIT)[-WORDS_LIMIT:]]
