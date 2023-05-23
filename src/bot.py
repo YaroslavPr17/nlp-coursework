@@ -87,6 +87,9 @@ def start_message(message):
     send_input_request_message(chat_id)
 
 
+# Management filters block  ###########################
+
+
 @bot.message_handler(
     func=lambda message: message.text == TASK_ASK_CLF_SENTIMENT_TEXT and message.content_type == 'text')
 def sentiment_message_handler(message):
@@ -95,9 +98,6 @@ def sentiment_message_handler(message):
 
     msg = bot.send_message(chat_id, ASK_REVIEW)
     bot.register_next_step_handler(msg, review_handler)
-
-
-
 
 
 @bot.message_handler(func=lambda message: message.text == TASK_ASK_PERS_INFO and message.content_type == 'text')
@@ -109,6 +109,19 @@ def person_message_handler(message):
     bot.register_next_step_handler(msg, name_message_handler)
 
 
+@bot.message_handler(commands=['help'])
+def help_message(message):
+    bot.send_message(message.chat.id, HELP_MESSAGE)
+
+
+@bot.message_handler(content_types=['text'])
+def get_text_messages(message):
+    chat_id = message.chat.id
+
+    bot.send_message(chat_id, UNKNOWN_COMMAND)
+
+
+# Worker filters block ###########################
 
 @bot.message_handler(func=lambda _message: _message.content_type == 'text')
 def review_handler(review_message):
@@ -127,8 +140,6 @@ def review_handler(review_message):
     os.remove(ret_value['graph_path'])
 
     send_input_request_message(chat_id)
-
-
 
 
 @bot.message_handler(func=lambda name_message: name_message.content_type == 'text')
@@ -203,18 +214,6 @@ def find_info_and_build_string(ne_data: pd.DataFrame, chat_id: int):
         out_str += f'{telebot.formatting.mbold(str(answer.capitalize()))}\n\n'
 
     return out_str
-
-
-@bot.message_handler(commands=['help'])
-def help_message(message):
-    bot.send_message(message.chat.id, HELP_MESSAGE)
-
-
-@bot.message_handler(content_types=['text'])
-def get_text_messages(message):
-    chat_id = message.chat.id
-
-    bot.send_message(chat_id, UNKNOWN_COMMAND)
 
 
 print('Bot started!')
