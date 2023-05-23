@@ -53,9 +53,9 @@ def load_dataset(filename: str,
             os.makedirs(Path(datasets_path, subfolder))
 
     if os.path.exists(path) and not force_remote:
-        print(f'Dataset was found in local storage.')
+        print(f"Dataset '{filename}' was found in local storage.")
     else:
-        print(f'Dataset will be loaded from remote storage.')
+        print(f"Dataset {filename} will be loaded from remote storage.")
         gdown.download(links[filename],
                        output=str(path), fuzzy=True)
 
