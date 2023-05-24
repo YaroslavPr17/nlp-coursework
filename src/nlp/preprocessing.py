@@ -2,8 +2,8 @@ import re
 from typing import Callable, List
 
 
-def clean(review: str, lowercase: bool = False, char_clean: bool = False, lemmatize: bool = False,
-          tokenize: bool = False, remove_stopwords: bool = False,
+def clean(review: str, lowercase: bool = False, char_clean: bool = False, clean_mark_number_patterns: bool = False,
+          lemmatize: bool = False, tokenize: bool = False, remove_stopwords: bool = False,
           tokenizer_type: str = None, lemmatizer_type: str = 'pymorphy2', stopwords: List[str] = None,
           tagger=None, lemmatizer=None):
 
@@ -15,6 +15,10 @@ def clean(review: str, lowercase: bool = False, char_clean: bool = False, lemmat
         _escape_pattern = r'[\n|\r|\b]'
         review = re.sub(_html_pattern, '  ', review)
         review = re.sub(_escape_pattern, '  ', review)
+
+    if clean_mark_number_patterns:
+        mark_number_pattern = r'\d{1,2} из \d{1,2}'
+        review = re.sub(mark_number_pattern, '  ', review)
 
     if tokenize:
         if tokenizer_type == 'razdel':
