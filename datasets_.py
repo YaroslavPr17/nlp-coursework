@@ -81,12 +81,20 @@ class DatasetLoader:
                                           classnames_to_int: bool = False,
                                           random_state: int = 42,
                                           show_path: bool = False,
+                                          no_marks: bool = False,
+                                          int_to_classnames: bool = False,
                                           **kwargs) -> Union[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame]]:
         subfolder = 'reviews_Review_Label'
         if tokenizer:
-            filename = f'{subfolder}_{tokenizer}_{stopwords}.csv'
+            if no_marks:
+                filename = f'{subfolder}_{tokenizer}_{stopwords}_no_marks.csv'
+            else:
+                filename = f'{subfolder}_{tokenizer}_{stopwords}.csv'
         else:
-            filename = f'{subfolder}.csv'
+            if no_marks:
+                filename = f'{subfolder}_no_marks.csv'
+            else:
+                filename = f'{subfolder}.csv'
 
         try:
             # dataset = pd.read_csv(Path(datasets_path, subfolder, filename), index_col=0)
@@ -98,6 +106,14 @@ class DatasetLoader:
                     'POSITIVE': 2,
                     'NEUTRAL': 1,
                     'NEGATIVE': 0
+                }
+                dataset.label = dataset.label.apply(lambda label: label_encoding[label])
+
+            if int_to_classnames:
+                label_encoding = {
+                    2: 'POSITIVE',
+                    1: 'NEUTRAL',
+                    0: 'NEGATIVE'
                 }
                 dataset.label = dataset.label.apply(lambda label: label_encoding[label])
 
