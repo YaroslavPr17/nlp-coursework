@@ -1,15 +1,10 @@
 import sys
-from pathlib import Path
 from typing import Dict, List, Union, Tuple
 
-import dill
-import pandas as pd
-
+from src.data.films_info.builders import FilmParametersBuilder
 from src.data.films_info.functions import get_genres, get_countries
 from src.data.requests import FilmListRequester, ReviewRequester, TopFilmsRequester
 from src.utils.stylifiers import Stylers
-from src.utils.constants import datasets_path
-from src.data.films_info.builders import FilmParametersBuilder
 
 
 def aggregate_films_by_letter() -> List:
@@ -60,7 +55,7 @@ class FilmListAggregator:
         if 'countries' in request_params:
             request_params['countries'] = [countries_list[request_params['countries']]]
 
-        print('AGGREGATOR:', Stylers.bold(f'PARAMS TO SEARCH: \n'), request_params, end='\n\n')
+        print('AGGREGATOR:', Stylers.bold('PARAMS TO SEARCH: \n'), request_params, end='\n\n')
 
         response = FilmListRequester(params=request_params).perform(page=1)
 
@@ -87,46 +82,11 @@ def aggregate_reviews_by_ids_list(film_ids: list) -> Union[dict[str, dict], tupl
     try:
         for film_id in film_ids:
             try:
-                new_reviews, total_pages = ReviewAggregator(film_id, from_func=True).perform()
+                new_reviews, _total_pages = ReviewAggregator(film_id, from_func=True).perform()
             except Exception as e:
                 print('Exception:', e, file=sys.stderr)
                 continue
             reviews.update(new_reviews)
-    except KeyboardInterrupt:
-        print('Keyboard interrupt caught. Films returned.', file=sys.stderr)
-        return reviews
-
-    return reviews
-
-
-def aggregate_reviews_for_n_films(n: int = None, random=False) -> Dict:
-    reviews: Dict[str, dict] = {}
-
-    with open(Path(datasets_path, 'films'), 'rb') as films_file:
-        films: pd.DataFrame = dill.load(films_file)
-
-    if n is not None:
-        film_ids = films['kinopoiskId'].sample(n)
-    else:
-        film_ids = films['kinopoiskId']
-
-    try:
-        if n is None:
-            for film_id in film_ids:
-                reviews.update(ReviewAggregator(film_id).perform())
-        else:
-            if random is None:
-                for index, film_id in enumerate(film_ids):
-                    if index < n:
-                        reviews.update(ReviewAggregator(film_id).perform())
-                    else:
-                        break
-            else:
-                for index, film_id in enumerate(film_ids):
-                    if index < n:
-                        reviews.update(ReviewAggregator(film_id).perform())
-                    else:
-                        break
     except KeyboardInterrupt:
         print('Keyboard interrupt caught. Films returned.', file=sys.stderr)
         return reviews
@@ -167,8 +127,8 @@ class ReviewAggregator:
 
         if self.from_func:
             return reviews, self.total_pages
-        else:
-            return reviews
+
+        return reviews
 
 
 class TopAggregator:

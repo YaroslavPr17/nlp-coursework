@@ -103,12 +103,11 @@ def get_person_characteristics(data: pd.DataFrame,
             current_session_passed += 1
 
     except KeyboardInterrupt:
-        pass
-    finally:
         return np.array(scores), np.array(answers)
+
+    return np.array(scores), np.array(answers)
 
 
 def make_film_representation(film_id: int, titles: pd.DataFrame):
     obj = titles[titles['film_id'] == film_id]
     return f"{obj['title'].values[0]} ({obj['year'].values[0]})"
-

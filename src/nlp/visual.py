@@ -1,10 +1,10 @@
-from sklearn.feature_extraction.text import CountVectorizer
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-import numpy as np
-
 from typing import Iterable, Tuple
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from sklearn.feature_extraction.text import CountVectorizer
 
 
 def get_n_most_frequent_ngrams(corpus: Iterable[str],
@@ -36,7 +36,7 @@ def get_n_most_frequent_ngrams(corpus: Iterable[str],
 def visualize_ngram_occurrences(corpus: Iterable[str], ngram_range: Tuple[int] = (1, 1), top_n: int =10):
     assert len(ngram_range) == 2, "Wrong length of ngram_range parameter. Expected 'ngram_range' == 2."
 
-    fig, ax = plt.subplots(ngram_range[1] - ngram_range[0] + 1, 1,
+    _, ax = plt.subplots(ngram_range[1] - ngram_range[0] + 1, 1,
                            figsize=(3 + ngram_range[1] * 2.5, ngram_range[1] * (1.1 + (top_n - 1) / 8)))
 
     if not isinstance(ax, np.ndarray):

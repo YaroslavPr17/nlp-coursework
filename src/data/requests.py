@@ -1,11 +1,13 @@
 import sys
 
 import requests
-import src.utils.constants as constants
+from src.utils import constants
 from src.utils.stylifiers import Stylers
 
-base_url_2_2 = 'https://kinopoiskapiunofficial.tech/api/v2.2'
-base_url_2_1 = 'https://kinopoiskapiunofficial.tech/api/v2.1'
+BASE_URL_2_2 = 'https://kinopoiskapiunofficial.tech/api/v2.2'
+BASE_URL_2_1 = 'https://kinopoiskapiunofficial.tech/api/v2.1'
+
+TIMEOUT_DELAY = 10  # seconds
 
 
 class Requester:
@@ -26,7 +28,7 @@ class FilmListRequester(Requester):
 
     def perform(self, page: int) -> requests.Response:
         self.params['page'] = page
-        response = requests.get(base_url_2_2 + self.task_url, params=self.params,
+        response = requests.get(BASE_URL_2_2 + self.task_url, params=self.params, timeout=TIMEOUT_DELAY,
                                 headers={'X-API-KEY': constants.X_API_KEY})
 
         if response.status_code != 200:
@@ -42,7 +44,7 @@ class FilmRequester(Requester):
         self.task_url = '/films'
 
     def perform(self, film_id: int) -> requests.Response:
-        response = requests.get(f"{base_url_2_2}{self.task_url}/{film_id}",
+        response = requests.get(f"{BASE_URL_2_2}{self.task_url}/{film_id}", timeout=TIMEOUT_DELAY,
                                 headers={'X-API-KEY': constants.X_API_KEY})
 
         if response.status_code != 200:
@@ -60,7 +62,7 @@ class FilmListRequesterByKeyword(Requester):
 
     def perform(self, page: int) -> requests.Response:
         self.params['page'] = page
-        response = requests.get(base_url_2_1 + self.task_url, params=self.params,
+        response = requests.get(BASE_URL_2_1 + self.task_url, params=self.params, timeout=TIMEOUT_DELAY,
                                 headers={'X-API-KEY': constants.X_API_KEY})
 
         if response.status_code != 200:
@@ -75,7 +77,8 @@ class FiltersRequester:
         self.task_url = '/films/filters'
 
     def perform(self) -> requests.Response:
-        response = requests.get(base_url_2_2 + self.task_url, headers={'X-API-KEY': constants.X_API_KEY})
+        response = requests.get(BASE_URL_2_2 + self.task_url, timeout=TIMEOUT_DELAY,
+                                headers={'X-API-KEY': constants.X_API_KEY})
 
         if response.status_code != 200:
             Requester.print_error(self.__class__, response.status_code)
@@ -89,8 +92,8 @@ class ReviewRequester:
         self.task_url = '/films/{id}/reviews'
 
     def perform(self, id_: int, params: dict) -> requests.Response:
-        response = requests.get(base_url_2_2 + self.task_url.replace('{id}', str(id_)),
-                                params=params,
+        response = requests.get(BASE_URL_2_2 + self.task_url.replace('{id}', str(id_)),
+                                params=params, timeout=TIMEOUT_DELAY,
                                 headers={'X-API-KEY': constants.X_API_KEY})
 
         if response.status_code != 200:
@@ -108,8 +111,8 @@ class TopFilmsRequester:
         self.task_url = '/films/top'
 
     def perform(self, top_type: str, page: int) -> requests.Response:
-        response = requests.get(base_url_2_2 + self.task_url,
-                                params={'type': top_type, 'page': page},
+        response = requests.get(BASE_URL_2_2 + self.task_url,
+                                params={'type': top_type, 'page': page}, timeout=TIMEOUT_DELAY,
                                 headers={'X-API-KEY': constants.X_API_KEY})
 
         if response.status_code != 200:

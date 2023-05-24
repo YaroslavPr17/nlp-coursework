@@ -1,6 +1,6 @@
+import dataclasses
 import os
-from pathlib import Path
-from typing import Dict, Union, Tuple
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -18,6 +18,7 @@ from src.utils.string_constants import *
 from src.utils.constants import image_path
 
 
+@dataclasses.dataclass
 class User:
     def __init__(self, chat_id):
         self.chat_id = chat_id
@@ -74,7 +75,7 @@ def send_input_request_message(chat_id: int):
     keyboard.add(types.KeyboardButton(TASK_ASK_CLF_SENTIMENT_TEXT))
     keyboard.add(types.KeyboardButton(TASK_ASK_PERS_INFO))
 
-    bot.send_message(chat_id, 'Что Вы хотите сделать?', reply_markup=keyboard)
+    bot.send_message(chat_id, ASK_ACTION, reply_markup=keyboard)
 
 
 @bot.message_handler(commands=['start'])

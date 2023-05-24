@@ -3,13 +3,14 @@ import os
 from typing import Iterable
 
 import dill
+import matplotlib
 import numpy as np
 import pandas as pd
-import matplotlib
-matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 from nltk import WhitespaceTokenizer
 from sklearn.feature_extraction.text import CountVectorizer
+
+matplotlib.use('Agg')
 
 
 class Pipeline:

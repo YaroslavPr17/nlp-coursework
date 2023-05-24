@@ -5,7 +5,6 @@ import pandas as pd
 
 from src.data.aggregators import \
     aggregate_films_by_letter, \
-    aggregate_reviews_for_n_films, \
     aggregate_reviews_by_ids_list, aggregate_films_by_params
 from src.utils.constants import datasets_path
 
@@ -13,7 +12,7 @@ films_path = Path(datasets_path, 'films.df')
 reviews_path = Path(datasets_path, 'reviews.df')
 
 
-def save_films_by_letter():
+def save_films_by_letter() -> pd.DataFrame:
     films = aggregate_films_by_letter()
     print(f'Info about {len(films)} films loaded by letter.')
 
@@ -36,7 +35,7 @@ def save_films_by_letter():
         return dill.load(file)
 
 
-def save_films_by_params(params: dict):
+def save_films_by_params(params: dict) -> pd.DataFrame:
     films = aggregate_films_by_params(params)
     print(f'Info about {len(films)} films loaded by parameters specified.')
 
@@ -59,27 +58,7 @@ def save_films_by_params(params: dict):
         return dill.load(file)
 
 
-def save_reviews_for_n_films(n=None):
-    reviews = aggregate_reviews_for_n_films(n)
-    print(f'Info about {len(reviews)} reviews.df loaded for n films.')
-
-    try:
-        with open(reviews_path, 'rb') as file:
-            old_reviews = dill.load(file)
-    except FileNotFoundError:
-        print('No saved reviews.df. New dataset created.')
-        with open(reviews_path, 'wb') as file:
-            dill.dump(pd.DataFrame(reviews), file)
-    else:
-        print('There are saved reviews.df. New reviews.df will be saved into existing dataset.')
-        with open(reviews_path, 'wb') as file:
-            dill.dump(pd.concat([old_reviews, pd.DataFrame(reviews).transpose()]), file)
-
-    with open(reviews_path, 'rb') as file:
-        return dill.load(file)
-
-
-def save_reviews_by_ids_list(ids_list: list):
+def save_reviews_by_ids_list(ids_list: list) -> pd.DataFrame:
     reviews = aggregate_reviews_by_ids_list(ids_list)
     print(f'Info about {len(reviews)} reviews.df loaded for n films.')
 
@@ -100,7 +79,7 @@ def save_reviews_by_ids_list(ids_list: list):
         return dill.load(file)
 
 
-def save_existing_reviews(reviews: dict):
+def save_existing_reviews(reviews: dict) -> pd.DataFrame:
     print(f'Info about {len(reviews)} reviews.df given.')
 
     try:
@@ -120,7 +99,7 @@ def save_existing_reviews(reviews: dict):
         return dill.load(file)
 
 
-def save_ids_list_for_top_films(aggregated_top: list, file_infix: str):
+def save_ids_list_for_top_films(aggregated_top: list, file_infix: str) -> pd.DataFrame:
     assert file_infix in ('best', 'popular'), "Wrong type of infix. Available: 'best' or 'popular'."
 
     filename = f'top_{file_infix}_films_Ids.df'
@@ -146,8 +125,7 @@ def save_ids_list_for_top_films(aggregated_top: list, file_infix: str):
         return dill.load(file)
 
 
-
-def save_Review_Label_dataset_from_full_dataframe(remove_duplicates: bool = False):
+def save_Review_Label_dataset_from_full_dataframe(remove_duplicates: bool = False) -> pd.DataFrame:
     raw_dataset_filename = 'reviews.df'
     new_dataset_filename = 'reviews_Review_Label.df'
 
@@ -157,7 +135,7 @@ def save_Review_Label_dataset_from_full_dataframe(remove_duplicates: bool = Fals
             print(f"Shape of full '{raw_dataset_filename}' DataFrame = {reviews.shape}.")
     except FileNotFoundError:
         print(f'There is no file named {raw_dataset_filename} in datasets folder.')
-        return
+        return pd.DataFrame()
 
     with open(Path(datasets_path, new_dataset_filename), 'wb') as rev_file:
         dataset = pd.DataFrame([reviews.index, reviews.type]).transpose().set_axis(labels=['review', 'label'],

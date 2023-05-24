@@ -1,15 +1,8 @@
 import sys
-from typing import Iterable, List
-import dill
-import os
+from typing import List
 
 import numpy as np
 import pandas as pd
-
-from sklearn.feature_extraction.text import CountVectorizer
-
-from nltk.tokenize import WhitespaceTokenizer
-
 import torch
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
@@ -219,7 +212,6 @@ class BertLogRegClassifier:
 
         self.classifier.fit(self.all_train_embeddings, all_labels)
 
-        
     def predict(self, test_input, print_report=False):
         self.model.eval()
 
@@ -240,19 +232,17 @@ class BertLogRegClassifier:
                 ).logits
 
                 self.all_test_embeddings = np.append(self.all_test_embeddings, embeddings.cpu().numpy())
-                
+
                 all_labels.extend(labels.tolist())
 
         self.all_test_embeddings = self.all_test_embeddings.reshape(-1, self.out_features)
-        
+
         all_preds = self.classifier.predict(self.all_test_embeddings)
-        
+
         if print_report:
             print(classification_report(all_labels, all_preds))
 
         return all_preds
-
-
 
 
 def get_df_by_person(data: pd.DataFrame, name: str) -> pd.DataFrame:
@@ -271,7 +261,7 @@ def collect_sents_to_summarize(data: pd.DataFrame, n_sents: int = 100) -> List[s
     for sents in data['occurrences']:
         all_sents.extend(sents)
 
-    if not len(all_sents):
+    if not all_sents:
         print()
         return all_sents
     all_sents = np.array(all_sents)

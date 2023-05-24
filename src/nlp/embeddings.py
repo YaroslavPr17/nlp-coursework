@@ -72,9 +72,9 @@ def corp2vecs(corpus: pd.Series,
         if train:
             print(f'Training PRETRAINED {model_type} model on given documents...')
             raise NotImplementedError
-        else:
-            print(f'Provided with pretrained {model_type} model. Training skipped.')
-            model = pretrained_model
+
+        print(f'Provided with pretrained {model_type} model. Training skipped.')
+        model = pretrained_model
 
     print('Vectorizing each document...')
     vectorized = tokenized_corpus.apply(doc2vec, args=(model, emb_size)).to_numpy()

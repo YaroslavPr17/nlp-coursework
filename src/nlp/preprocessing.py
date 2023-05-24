@@ -1,5 +1,5 @@
 import re
-from typing import Callable, List
+from typing import List
 
 
 def clean(review: str, lowercase: bool = False, char_clean: bool = False, clean_mark_number_patterns: bool = False,

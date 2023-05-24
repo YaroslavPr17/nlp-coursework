@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 
-class Stylers(object):
+class Stylers:
     pass
 
 
@@ -34,7 +34,7 @@ class Mode:
     END = '\033[0m'
 
 
-for mode in Mode.__dict__.keys():
+for mode in Mode.__dict__:
     # print(mode)
     if not mode.startswith('__'):
         add_styler(Stylers, mode.lower())
