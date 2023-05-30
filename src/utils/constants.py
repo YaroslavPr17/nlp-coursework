@@ -8,4 +8,5 @@ X_API_KEY = 'ce447249-93df-42f8-9471-90dbd063a49b'
 
 # project_path = Path.cwd()
 datasets_path = Path('data')
+models_path = Path('models')
 image_path = Path('data', 'images')
