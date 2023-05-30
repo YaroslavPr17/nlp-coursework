@@ -10,6 +10,8 @@ from matplotlib import pyplot as plt
 from nltk import WhitespaceTokenizer
 from sklearn.feature_extraction.text import CountVectorizer
 
+from src.utils.loaders import load_model
+
 matplotlib.use('Agg')
 
 
@@ -55,24 +57,20 @@ class Pipeline:
         # print('Vectorization...')
 
         if self.model_type == 'linear' and self.model is None:
-            with open('models/logreg_tokrazdel_stopno_100k.model', 'rb') as f:
-                self.model = dill.load(f)
+            self.model = load_model('logreg_tokrazdel_stopno_500k.model')
 
-            with open('models/count_vectorizer_1_4_100000.vocab', 'rb') as f:
-                vocab = dill.load(f)
-                self.vectorizer = CountVectorizer(tokenizer=WhitespaceTokenizer().tokenize,
-                                                  vocabulary=vocab,
-                                                  ngram_range=(1, 4))
+            vocab = load_model('count_vectorizer_1_4_500k.vocab')
+            self.vectorizer = CountVectorizer(tokenizer=WhitespaceTokenizer().tokenize,
+                                              vocabulary=vocab,
+                                              ngram_range=(1, 4))
 
         if self.model_type == 'lightgbm' and self.model is None:
-            with open('models/lightgbm_tokrazdel_stopno_100k.model', 'rb') as f:
-                self.model = dill.load(f)
+            self.model = load_model('lightgbm_tokrazdel_stopno_500k.model')
 
-            with open('models/lightgbm_count_vectorizer_1_4_100000.vocab', 'rb') as f:
-                vocab = dill.load(f)
-                self.vectorizer = CountVectorizer(tokenizer=WhitespaceTokenizer().tokenize,
-                                                  vocabulary=vocab,
-                                                  ngram_range=(1, 4))
+            vocab = load_model('count_vectorizer_1_4_500k.vocab')
+            self.vectorizer = CountVectorizer(tokenizer=WhitespaceTokenizer().tokenize,
+                                              vocabulary=vocab,
+                                              ngram_range=(1, 4))
 
         X_texts = self.vectorizer.transform(docs)
 
