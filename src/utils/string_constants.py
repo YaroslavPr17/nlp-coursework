@@ -25,4 +25,4 @@ EMPTY_NAME_WARNING = 'Вы ввели некорректное имя персо
 NO_FILMS_BY_NAME_WARNING = 'Нет фильмов, в которых присутствует персона. Давайте начнём сначала.'
 NO_PROPER_CHARACTERISTICS = 'Нет хороших характеристих по заданным параметрам :('
 
-WAITING_FOR_PERSON_INFO_RESPONSE_ANSWER = 'Поиск... Максимальное время ожидания: 5 минут.'
+WAITING_FOR_PERSON_INFO_RESPONSE_ANSWER = 'Поиск... Максимальное время ожидания: 8 минут.'
