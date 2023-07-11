@@ -144,20 +144,23 @@ class BertClassifier:
         val_loss = np.mean(losses)
         return val_acc.item(), val_loss
 
-    def train(self, n_epochs, pretrain_test=False):
+    def train(self, n_epochs: int,
+              train_dataloader: torch.utils.data.DataLoader,
+              test_dataloader: torch.utils.data.DataLoader,
+              pretrain_test: bool =False):
         try:
             if pretrain_test:
                 print('Pre-training test:')
-                val_acc, val_loss = self.evaluate()
+                val_acc, val_loss = self.evaluate(test_dataloader)
                 print(f'Test loss {val_loss} accuracy {val_acc}')
                 print('-' * 10)
 
             for epoch in range(n_epochs):
                 print(f'Epoch {epoch + 1}/{n_epochs}')
-                train_acc, train_loss = self.fit()
+                train_acc, train_loss = self.fit(train_dataloader)
                 print(f'Train loss {train_loss} accuracy {train_acc}')
 
-                val_acc, val_loss = self.evaluate()
+                val_acc, val_loss = self.evaluate(test_dataloader)
                 print(f'Test loss {val_loss} accuracy {val_acc}')
                 print('-' * 10)
 
