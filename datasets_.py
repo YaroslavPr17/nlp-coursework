@@ -132,14 +132,11 @@ class DatasetLoader:
             print(f"No file named '{filename}' in dataset directory.")
 
     @classmethod
-    def load_reviews(cls, show_path: bool = False):
+    def load_reviews(cls, show_path: bool = False, **kwargs):
         filename = f'reviews.csv'
 
-        if show_path:
-            print(Path(datasets_path, filename))
-
         try:
-            dataset = pd.read_csv(Path(datasets_path, filename), index_col=0)
+            dataset = load_dataset(filename, show_path=show_path, **kwargs)
             return dataset
         except FileNotFoundError:
             print(f"No file named '{filename}' in dataset directory.")
