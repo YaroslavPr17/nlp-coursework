@@ -15,18 +15,19 @@ from src.nlp.classification import Pipeline
 
 
 class ReviewDataset(Dataset):
-    def __init__(self, reviews, labels, tokenizer, max_model_input_length=512):
+    def __init__(self, reviews, tokenizer, labels=False, max_model_input_length=512):
         self.reviews = reviews
         self.labels = labels
         self.tokenizer = tokenizer
         self.max_model_input_length = max_model_input_length
 
     def __len__(self):
-        return len(self.labels)
+        return len(self.reviews)
 
     def __getitem__(self, idx):
         review = self.reviews.iloc[idx]
-        label = self.labels.iloc[idx]
+        if not isinstance(self.labels, bool):
+            label = self.labels.iloc[idx]
         review_tokenized = self.tokenizer(
             review,
             add_special_tokens=True,
@@ -38,13 +39,15 @@ class ReviewDataset(Dataset):
         )
         input_ids = review_tokenized['input_ids'].flatten()
         attn_mask = review_tokenized['attention_mask'].flatten()
-
-        return {
+        
+        ret = {
             'review': review,
             'input_ids': input_ids,
-            'attention_mask': attn_mask,
-            'label': label,
-        }
+            'attention_mask': attn_mask
+        }         
+        if not isinstance(self.labels, bool):
+            ret['label'] = label 
+        return ret
 
 
 class BertClassifier:
@@ -168,6 +171,46 @@ class BertClassifier:
 
         except KeyboardInterrupt:
             print('Training was manually stopped. ')
+            
+    
+class BertEmbedder:
+    def __init__(self, model, tokenizer, device=None):
+
+        self.model = model
+        self.tokenizer = tokenizer
+
+        self.max_len = self.model.config.max_position_embeddings
+        self.out_features = self.model.config.pooler_fc_size
+        self.model.dropout = torch.nn.Sequential()
+        self.model.classifier = torch.nn.Sequential()
+
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") if not device else torch.device(device) 
+        self.model.to(self.device)
+        
+
+    def build(self, train_dataloader: torch.utils.data.DataLoader):
+        self.model.eval()
+
+        all_embeddings = np.array([])
+
+        t = tqdm(train_dataloader, file=sys.stdout)
+
+        for data in t:
+            with torch.no_grad():
+                input_ids = data['input_ids'].to(self.device)
+                attention_mask = data['attention_mask'].to(self.device).to(float)
+                
+                embeddings = self.model(
+                    input_ids=input_ids,
+                    attention_mask=attention_mask
+                ).logits
+
+                all_embeddings = np.append(all_embeddings, embeddings.cpu().numpy())
+
+        all_embeddings = all_embeddings.reshape(-1, self.out_features)
+        
+        return all_embeddings
+
 
 
 class BertLogRegClassifier:
