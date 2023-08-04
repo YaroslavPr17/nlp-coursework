@@ -6,6 +6,8 @@ from src.data.films_info.functions import get_genres, get_countries
 from src.data.requests import FilmListRequester, ReviewRequester, TopFilmsRequester
 from src.utils.stylifiers import Stylers
 
+REST_PAGE_SIZE = 20
+
 
 def aggregate_films_by_letter() -> List:
     films_list = []
@@ -77,12 +79,15 @@ class FilmListAggregator:
         return self.film_list
 
 
-def aggregate_reviews_by_ids_list(film_ids: list) -> Union[dict[str, dict], tuple[dict[str, dict], int]]:
+def aggregate_reviews_by_ids_list(film_ids: list, existing_reviews: list[int]) -> Union[dict[str, dict], tuple[dict[str, dict], int]]:
     reviews: Dict[str, dict] = {}
     try:
-        for film_id in film_ids:
+        for i, film_id in enumerate(film_ids):
             try:
-                new_reviews, _total_pages = ReviewAggregator(film_id, from_func=True).perform()
+                if existing_reviews:
+                    new_reviews = ReviewAggregator(film_id).perform(existing_reviews[i])
+                else:
+                    new_reviews = ReviewAggregator(film_id).perform()
             except Exception as e:
                 print('Exception:', e, file=sys.stderr)
                 continue
@@ -95,14 +100,34 @@ def aggregate_reviews_by_ids_list(film_ids: list) -> Union[dict[str, dict], tupl
 
 
 class ReviewAggregator:
-    def __init__(self, film_id: int, from_func: bool = False):
+    def __init__(self, film_id: int, return_total_pages: bool = False):
         self.film_id = film_id
         self.total_pages = None
-        self.from_func = from_func
+        self.return_total_pages = return_total_pages
 
-    def perform(self) -> Union[Dict, Tuple[Dict, int]]:
+    def perform(self, n_existing_reviews: int = None) -> Union[Dict, Tuple[Dict, int]]:
         requester = ReviewRequester()
+
+        reviews: Dict[str, dict] = {}
+
         response = requester.perform(self.film_id, {'page': 1})
+        json_response: dict = response.json()
+
+        print(f'{json_response.get("total")} reviews available by new request')
+
+        if n_existing_reviews is None or not n_existing_reviews:
+            _current_page: int = 1
+        else:
+            print(f'{n_existing_reviews} reviews already exist')
+
+            if json_response.get('total') > n_existing_reviews:
+                _current_page: int = n_existing_reviews // REST_PAGE_SIZE + 1
+            else:
+                print(f'No new reviews for {self.film_id} film ({json_response.get("total")} <(=) '
+                      f'{n_existing_reviews}).')
+                return reviews
+
+        response = requester.perform(self.film_id, {'page': _current_page})
         json_response: dict = response.json()
 
         self.total_pages: int = json_response.get('totalPages')
@@ -110,11 +135,10 @@ class ReviewAggregator:
         if self.total_pages is None:
             print(json_response)
 
-        reviews: Dict[str, dict] = {}
-        _current_page: int = 1
-
+        print('Current pages:')
         while review_items := json_response.get('items'):
             print(_current_page, end=' ')
+            print(review_items, end='\n\n\n')
             for review in review_items:
                 reviews[review.get('description')] = {}
                 for field in review:
@@ -125,10 +149,10 @@ class ReviewAggregator:
             json_response = requester.perform(self.film_id, {'page': _current_page}).json()
         print()
 
-        if self.from_func:
+        if self.return_total_pages:
             return reviews, self.total_pages
-
         return reviews
+
 
 
 class TopAggregator:

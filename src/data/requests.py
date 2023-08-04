@@ -92,6 +92,7 @@ class ReviewRequester:
         self.task_url = '/films/{id}/reviews'
 
     def perform(self, id_: int, params: dict) -> requests.Response:
+        params.update({'order': 'DATE_ASC'})
         response = requests.get(BASE_URL_2_2 + self.task_url.replace('{id}', str(id_)),
                                 params=params, timeout=TIMEOUT_DELAY,
                                 headers={'X-API-KEY': constants.X_API_KEY})

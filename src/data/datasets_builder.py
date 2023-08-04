@@ -4,35 +4,12 @@ import dill
 import pandas as pd
 
 from src.data.aggregators import \
-    aggregate_films_by_letter, \
     aggregate_reviews_by_ids_list, aggregate_films_by_params
 from src.utils.constants import datasets_path
+from datasets_ import DatasetLoader
 
-films_path = Path(datasets_path, 'films.df')
-reviews_path = Path(datasets_path, 'reviews.df')
-
-
-def save_films_by_letter() -> pd.DataFrame:
-    films = aggregate_films_by_letter()
-    print(f'Info about {len(films)} films loaded by letter.')
-
-    try:
-        with open(films_path, 'rb') as file:
-            old_films = dill.load(file)
-    except FileNotFoundError:
-        print('No saved films. New dataset created.')
-        with open(films_path, 'wb') as file:
-            dill.dump(pd.DataFrame(films), file)
-    else:
-        print(f'There are saved films ({len(old_films)} items). New films-info will be saved into existing dataset.')
-        with open(films_path, 'wb') as file:
-            dill.dump(
-                pd.concat([old_films, pd.DataFrame(films)],
-                          ignore_index=True),
-                file)
-
-    with open(films_path, 'rb') as file:
-        return dill.load(file)
+films_path = Path(datasets_path, 'films.csv')
+reviews_path = Path(datasets_path, 'reviews.csv')
 
 
 def save_films_by_params(params: dict) -> pd.DataFrame:
@@ -58,25 +35,30 @@ def save_films_by_params(params: dict) -> pd.DataFrame:
         return dill.load(file)
 
 
-def save_reviews_by_ids_list(ids_list: list) -> pd.DataFrame:
-    reviews = aggregate_reviews_by_ids_list(ids_list)
-    print(f'Info about {len(reviews)} reviews.df loaded for n films.')
+def save_reviews_by_ids_list(ids_list: list, update_all: bool = False) -> None:
+    old_reviews = DatasetLoader.load_reviews()
 
-    try:
-        with open(reviews_path, 'rb') as file:
-            old_reviews = dill.load(file)
-    except FileNotFoundError:
+    n_existing_reviews = []
+    if not update_all:
+        stats = old_reviews.groupby('film_id').count().review
+
+        for id_ in ids_list:
+            n_existing_reviews.append(stats.get(id_, default=0))
+
+    reviews = aggregate_reviews_by_ids_list(ids_list, n_existing_reviews)
+    print(f'Info about {len(reviews)} reviews loaded for {len(ids_list)} films.')
+
+    if old_reviews is None:
         print('No saved reviews. New dataset created.')
-        with open(reviews_path, 'wb') as file:
-            dill.dump(pd.DataFrame(reviews).transpose(), file)
+        reviews = pd.DataFrame(reviews).transpose().drop_duplicates(subset=['kinopoiskId'])
     else:
         print(f"There are saved reviews. ({old_reviews.shape[0]} items). "
-              f"New reviews ({len(reviews)} items) will be saved into existing dataset.")
-        with open(reviews_path, 'wb') as file:
-            dill.dump(pd.concat([old_reviews, pd.DataFrame(reviews).transpose()]), file)
+              f"New reviews ({len(reviews)} items) will be added to existing dataset.")
+        reviews = pd.concat([old_reviews, pd.DataFrame(reviews).transpose().reset_index(names='review')],
+                            ignore_index=True).drop_duplicates(subset=['kinopoiskId'])
 
-    with open(reviews_path, 'rb') as file:
-        return dill.load(file)
+    reviews.to_csv(reviews_path)
+    print('Successfully updated.')
 
 
 def save_existing_reviews(reviews: dict) -> pd.DataFrame:
