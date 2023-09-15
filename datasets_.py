@@ -1,28 +1,47 @@
 import os.path
 from pathlib import Path
-from typing import Literal, Tuple, Union
+from typing import Literal, Tuple, Union, Optional
 
+import dill
 import gdown
 import pandas as pd
 from sklearn.model_selection import train_test_split as train_test_split_
 
 from src.utils.constants import datasets_path
-
+from src.dataflow.s3 import fetch_dataset
 
 links = {
-    'films_Id_Title.csv':           'https://drive.google.com/file/d/1Ks-HIXBJks5x6ZtFlhN3z7v2WhcVaKNr/view?usp=share_link',
-    'films_Id_Title_Year.csv':      'https://drive.google.com/file/d/1ZUlF7uk1RVbgUb7j9V3U0_cfcRkaYf_O/view?usp=share_link',
-    'named_entities.csv':           'https://drive.google.com/file/d/1hxNFX8XwmGx8HGtl2llGQFdY0yj3Jthh/view?usp=share_link',
-    'reviews.csv':                  'https://drive.google.com/file/d/1cbdn7YdW6Sc480wEUU2mkInyCi9QA-31/view?usp=share_link',
-    'reviews_Review_FilmId.csv':    'https://drive.google.com/file/d/1r0N5fvqI-xOHOs1zBOe-9mu7xm9Bh-K7/view?usp=share_link',
-    'top_best_films_Ids.csv':       'https://drive.google.com/file/d/1sz0yv_00jxT8-CRhX8eEFAHvHSw7KJtg/view?usp=share_link',
-    'top_popular_films_Ids.csv':    'https://drive.google.com/file/d/1fG5pO2XcoPpO71bGi3CaJrrVTSJKaZTH/view?usp=share_link',
-    'reviews_Review_Label.csv':                     'https://drive.google.com/file/d/1Cig_GpQ1tjU93rydkqGFie6ss6bNTNR8/view?usp=share_link',
-    'reviews_Review_Label_razdel_nltk.csv':         'https://drive.google.com/file/d/1Lsz_66tIggXUbglzL6khjU0CmuHxVXcr/view?usp=share_link',
-    'reviews_Review_Label_razdel_no.csv':           'https://drive.google.com/file/d/1Lsz_66tIggXUbglzL6khjU0CmuHxVXcr/view?usp=share_link',
-    'reviews_Review_Label_rutokenizer_nltk.csv':    'https://drive.google.com/file/d/1BAdi-lwwZ1zIsU8-V6ec_NPjCDb3AKsL/view?usp=share_link',
-    'reviews_Review_Label_rutokenizer_no.csv':      'https://drive.google.com/file/d/1xnuox7V9K2TQc0O6XxYnDYoAkOG4HGNV/view?usp=share_link',
+    'films_Id_Title.csv': 'https://drive.google.com/file/d/1Ks-HIXBJks5x6ZtFlhN3z7v2WhcVaKNr/view?usp=share_link',
+    'films_Id_Title_Year.csv': 'https://drive.google.com/file/d/1ZUlF7uk1RVbgUb7j9V3U0_cfcRkaYf_O/view?usp=share_link',
+    'named_entities.csv': 'https://drive.google.com/file/d/1hxNFX8XwmGx8HGtl2llGQFdY0yj3Jthh/view?usp=share_link',
+    'reviews.csv': 'https://drive.google.com/file/d/1cbdn7YdW6Sc480wEUU2mkInyCi9QA-31/view?usp=share_link',
+    'reviews_Review_FilmId.csv': 'https://drive.google.com/file/d/1r0N5fvqI-xOHOs1zBOe-9mu7xm9Bh-K7/view?usp=share_link',
+    'top_best_films_Ids.csv': 'https://drive.google.com/file/d/1sz0yv_00jxT8-CRhX8eEFAHvHSw7KJtg/view?usp=share_link',
+    'top_popular_films_Ids.csv': 'https://drive.google.com/file/d/1fG5pO2XcoPpO71bGi3CaJrrVTSJKaZTH/view?usp=share_link',
+    'reviews_Review_Label.csv': 'https://drive.google.com/file/d/1Cig_GpQ1tjU93rydkqGFie6ss6bNTNR8/view?usp=share_link',
+    'reviews_Review_Label_razdel_nltk.csv': 'https://drive.google.com/file/d/1Lsz_66tIggXUbglzL6khjU0CmuHxVXcr/view?usp=share_link',
+    'reviews_Review_Label_razdel_no.csv': 'https://drive.google.com/file/d/1Lsz_66tIggXUbglzL6khjU0CmuHxVXcr/view?usp=share_link',
+    'reviews_Review_Label_rutokenizer_nltk.csv': 'https://drive.google.com/file/d/1BAdi-lwwZ1zIsU8-V6ec_NPjCDb3AKsL/view?usp=share_link',
+    'reviews_Review_Label_rutokenizer_no.csv': 'https://drive.google.com/file/d/1xnuox7V9K2TQc0O6XxYnDYoAkOG4HGNV/view?usp=share_link',
 }
+
+
+class LDFrame(pd.DataFrame):
+
+    @staticmethod
+    def parse_str_dataframe(df_str: str):
+        import io
+        return pd.read_csv(io.StringIO(df_str), index_col=0)
+
+    @staticmethod
+    def load_from_s3(name: str, bucket: Optional[str] = None, parse_bytes_to_dataframe: Optional[bool] = True):
+        str_csv = fetch_dataset(name, bucket)
+
+        return LDFrame.parse_str_dataframe(str_csv.decode()) if parse_bytes_to_dataframe else \
+            str_csv
+
+    def push_to_s3(self, bucket: Optional[str] = None):
+        pass
 
 
 def load_dataset(filename: str,
@@ -132,11 +151,13 @@ class DatasetLoader:
             print(f"No file named '{filename}' in dataset directory.")
 
     @classmethod
-    def load_reviews(cls, show_path: bool = False, **kwargs):
-        filename = f'reviews.csv'
+    def load_reviews(cls, filename: str = 'reviews.csv', temporary: bool = False, show_path: bool = False, **kwargs):
+        subfolder = 'temp' if temporary else ''
+
+        filename = Path(filename).parts[-1]
 
         try:
-            dataset = load_dataset(filename, show_path=show_path, **kwargs)
+            dataset = load_dataset(filename, subfolder=subfolder, show_path=show_path, **kwargs)
             return dataset
         except FileNotFoundError:
             print(f"No file named '{filename}' in dataset directory.")

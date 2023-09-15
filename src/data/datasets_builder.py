@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import List, Optional, Union
 
 import dill
 import pandas as pd
@@ -35,30 +36,60 @@ def save_films_by_params(params: dict) -> pd.DataFrame:
         return dill.load(file)
 
 
-def save_reviews_by_ids_list(ids_list: list, update_all: bool = False) -> None:
-    old_reviews = DatasetLoader.load_reviews()
+def download_reviews_by_ids_list_and_update_dataset(ids_list: List[int],
+                                                    filter_existing_reviews: Optional[bool] = True,
+                                                    old_dataset_name: Optional[str] = 'reviews.csv'
+                                                    ) -> None:
+    old_reviews: Union[pd.DataFrame, None] = DatasetLoader.load_reviews(filename=old_dataset_name, temporary=True)
+    assert (old_reviews is not None) or (not filter_existing_reviews), \
+        'Cannot filter existing reviews without old dataset'
+
+    downloaded_reviews = download_reviews_by_ids_list(ids_list, filter_existing_reviews, old_reviews)
+
+    if old_reviews is not None:
+        print(f"There are saved reviews. ({old_reviews.shape[0]} items). "
+              f"New reviews ({len(downloaded_reviews)} items) will be added to existing dataset.")
+        new_reviews = merge_update_dataset(old_reviews, downloaded_reviews)
+    else:
+        print('No saved reviews. New dataset created.')
+        new_reviews = downloaded_reviews
+
+    new_reviews.to_csv(old_dataset_name)
+    print('Successfully updated.')
+
+
+def download_reviews_by_ids_list(ids_list: List[int],
+                                 filter_existing_reviews: Optional[bool] = True,
+                                 old_dataset: Optional[pd.DataFrame] = None) -> pd.DataFrame:
+
+    if filter_existing_reviews:
+        assert old_dataset is not None, 'Info about old dataset should be provided'
 
     n_existing_reviews = []
-    if not update_all:
+    if filter_existing_reviews:
+        old_reviews = old_dataset
+
         stats = old_reviews.groupby('film_id').count().review
 
         for id_ in ids_list:
             n_existing_reviews.append(stats.get(id_, default=0))
 
     reviews = aggregate_reviews_by_ids_list(ids_list, n_existing_reviews)
+
     print(f'Info about {len(reviews)} reviews loaded for {len(ids_list)} films.')
 
-    if old_reviews is None:
-        print('No saved reviews. New dataset created.')
-        reviews = pd.DataFrame(reviews).transpose().drop_duplicates(subset=['kinopoiskId'])
-    else:
-        print(f"There are saved reviews. ({old_reviews.shape[0]} items). "
-              f"New reviews ({len(reviews)} items) will be added to existing dataset.")
-        reviews = pd.concat([old_reviews, pd.DataFrame(reviews).transpose().reset_index(names='review')],
-                            ignore_index=True).drop_duplicates(subset=['kinopoiskId'])
+    return pd.DataFrame(reviews).transpose().reset_index(names='review').drop_duplicates(subset=['kinopoiskId'])
 
-    reviews.to_csv(reviews_path)
-    print('Successfully updated.')
+
+def merge_update_dataset(df_old: pd.DataFrame, df_new: pd.DataFrame):
+    df_shapes = (df_old.shape[1], df_new.shape[1])
+    if df_old is None and df_new is None:
+        return pd.DataFrame()
+    if df_old is None:
+        return df_new
+    if df_new is None or df_shapes[0] != df_shapes[1]:
+        return df_old
+    return pd.concat([df_old, df_new], ignore_index=True).drop_duplicates(subset=['kinopoiskId'])
 
 
 def save_existing_reviews(reviews: dict) -> pd.DataFrame:

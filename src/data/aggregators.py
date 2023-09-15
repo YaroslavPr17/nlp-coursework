@@ -1,5 +1,5 @@
 import sys
-from typing import Dict, List, Union, Tuple
+from typing import Dict, List, Union, Tuple, Optional
 
 from src.data.films_info.builders import FilmParametersBuilder
 from src.data.films_info.functions import get_genres, get_countries
@@ -79,7 +79,7 @@ class FilmListAggregator:
         return self.film_list
 
 
-def aggregate_reviews_by_ids_list(film_ids: list, existing_reviews: list[int]) -> Union[dict[str, dict], tuple[dict[str, dict], int]]:
+def aggregate_reviews_by_ids_list(film_ids: list, existing_reviews: Optional[list[int]] = None) -> Union[dict[str, dict], tuple[dict[str, dict], int]]:
     reviews: Dict[str, dict] = {}
     try:
         for i, film_id in enumerate(film_ids):
